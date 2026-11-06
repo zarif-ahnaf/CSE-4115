@@ -1,0 +1,156 @@
+{
+  "dataset": {
+    "name": "Heart Failure Prediction Dataset (fedesoriano)",
+    "rows": 918,
+    "columns_raw": 12,
+    "disease_rate": 0.5533769063180828,
+    "train_rows": 734,
+    "test_rows": 184
+  },
+  "base_models": {
+    "Logistic Regression": {
+      "Accuracy": 0.8859,
+      "Precision": 0.8857,
+      "Recall": 0.9118,
+      "F1-score": 0.8986,
+      "ROC-AUC": 0.9323
+    },
+    "Gaussian Naive Bayes": {
+      "Accuracy": 0.875,
+      "Precision": 0.9072,
+      "Recall": 0.8627,
+      "F1-score": 0.8844,
+      "ROC-AUC": 0.943
+    },
+    "Support Vector Machine": {
+      "Accuracy": 0.8696,
+      "Precision": 0.8679,
+      "Recall": 0.902,
+      "F1-score": 0.8846,
+      "ROC-AUC": 0.936
+    },
+    "Random Forest": {
+      "Accuracy": 0.8641,
+      "Precision": 0.8812,
+      "Recall": 0.8725,
+      "F1-score": 0.8768,
+      "ROC-AUC": 0.9307
+    },
+    "K-Nearest Neighbors": {
+      "Accuracy": 0.8478,
+      "Precision": 0.8627,
+      "Recall": 0.8627,
+      "F1-score": 0.8627,
+      "ROC-AUC": 0.9236
+    },
+    "Decision Tree": {
+      "Accuracy": 0.7391,
+      "Precision": 0.77,
+      "Recall": 0.7549,
+      "F1-score": 0.7624,
+      "ROC-AUC": 0.7372
+    }
+  },
+  "cross_validation": {
+    "Support Vector Machine": {
+      "CV Accuracy": 0.8584,
+      "CV Accuracy Std": 0.0461,
+      "CV Precision": 0.8532,
+      "CV Recall": 0.9041,
+      "CV F1": 0.8768,
+      "CV F1 Std": 0.0359
+    },
+    "Random Forest": {
+      "CV Accuracy": 0.8529,
+      "CV Accuracy Std": 0.0339,
+      "CV Precision": 0.8541,
+      "CV Recall": 0.8917,
+      "CV F1": 0.8708,
+      "CV F1 Std": 0.0255
+    },
+    "Logistic Regression": {
+      "CV Accuracy": 0.8515,
+      "CV Accuracy Std": 0.0289,
+      "CV Precision": 0.8639,
+      "CV Recall": 0.872,
+      "CV F1": 0.8671,
+      "CV F1 Std": 0.0223
+    },
+    "K-Nearest Neighbors": {
+      "CV Accuracy": 0.842,
+      "CV Accuracy Std": 0.0316,
+      "CV Precision": 0.8383,
+      "CV Recall": 0.8867,
+      "CV F1": 0.8616,
+      "CV F1 Std": 0.0253
+    },
+    "Gaussian Naive Bayes": {
+      "CV Accuracy": 0.8393,
+      "CV Accuracy Std": 0.0423,
+      "CV Precision": 0.8578,
+      "CV Recall": 0.8548,
+      "CV F1": 0.8552,
+      "CV F1 Std": 0.0353
+    },
+    "Decision Tree": {
+      "CV Accuracy": 0.7915,
+      "CV Accuracy Std": 0.0332,
+      "CV Precision": 0.8091,
+      "CV Recall": 0.818,
+      "CV F1": 0.8123,
+      "CV F1 Std": 0.0322
+    }
+  },
+  "tuned_random_forest": {
+    "best_params": {
+      "max_depth": 8,
+      "min_samples_leaf": 1,
+      "min_samples_split": 2,
+      "n_estimators": 100
+    },
+    "best_cv_f1": 0.8766153306223604,
+    "test_metrics": {
+      "Accuracy": 0.8586956521739131,
+      "Precision": 0.8725490196078431,
+      "Recall": 0.8725490196078431,
+      "F1-score": 0.8725490196078431,
+      "ROC-AUC": 0.931013868962219
+    }
+  },
+  "tuned_logistic_regression": {
+    "best_C": 0.1,
+    "best_cv_f1": 0.8684744118548687,
+    "test_metrics": {
+      "Accuracy": 0.8695652173913043,
+      "Precision": 0.8823529411764706,
+      "Recall": 0.8823529411764706,
+      "F1-score": 0.8823529411764706,
+      "ROC-AUC": 0.9346006695361072
+    }
+  },
+  "best_model": "Logistic Regression",
+  "top_rf_features": {
+    "ST_Slope_Up": 0.2032426206031392,
+    "ST_Slope_Flat": 0.126109659208943,
+    "MaxHR": 0.107406804925263,
+    "Oldpeak": 0.10555988768458872,
+    "ExerciseAngina_Y": 0.08978214430660243,
+    "Age": 0.06970462557487897,
+    "Cholesterol": 0.06561390794682714,
+    "RestingBP": 0.06244385165421883,
+    "ChestPainType_ATA": 0.047236671038791256,
+    "Sex_M": 0.03550399897638578
+  },
+  "top_permutation_features": {
+    "ST_Slope": 0.15027173913043482,
+    "Sex": 0.033695652173913085,
+    "ChestPainType": 0.023369565217391346,
+    "ExerciseAngina": 0.0192934782608696,
+    "FastingBS": 0.01793478260869568,
+    "Oldpeak": 0.017663043478260903,
+    "MaxHR": 0.01576086956521742,
+    "RestingECG": 0.014945652173913077,
+    "Cholesterol": 0.011413043478260904,
+    "Age": 0.008967391304347866
+  }
+}

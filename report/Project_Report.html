@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Heart Disease Prediction using Machine Learning</title>
+<style>
+@page { size: A4; margin: 17mm 16mm 18mm; }
+* { box-sizing: border-box; }
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 10.5pt; line-height: 1.55; color: #1b1b1b; margin: 0;
+}
+h1 {
+  font-size: 21pt; line-height: 1.25; margin: 0 0 10pt;
+  padding-bottom: 6pt; border-bottom: 2px solid #2c5f8a; color: #173a5e;
+  page-break-after: avoid;
+}
+h2 {
+  font-size: 15pt; margin: 22pt 0 8pt; padding-bottom: 3pt;
+  border-bottom: 1px solid #c9d6e3; color: #173a5e; page-break-after: avoid;
+}
+h3 { font-size: 12.2pt; margin: 15pt 0 6pt; color: #234c72; page-break-after: avoid; }
+p { margin: 6pt 0; text-align: justify; }
+ul, ol { margin: 6pt 0 6pt 18pt; }
+li { margin: 2pt 0; }
+a { color: #1a5c9c; text-decoration: none; }
+hr { border: none; border-top: 1px solid #d5dde5; margin: 16pt 0; }
+blockquote {
+  margin: 10pt 0; padding: 7pt 12pt; background: #f4f8fb;
+  border-left: 3px solid #2c5f8a; color: #333;
+}
+table {
+  border-collapse: collapse; width: 100%; margin: 9pt 0 12pt;
+  font-size: 8.8pt; page-break-inside: avoid;
+}
+th, td { border: 1px solid #b9c7d5; padding: 3.5pt 6pt; text-align: left; vertical-align: top; }
+th { background: #e8eef5; font-weight: 600; }
+tr:nth-child(even) td { background: #fafcfe; }
+code {
+  font-family: "Cascadia Mono", Consolas, monospace; font-size: 9pt;
+  background: #f1f4f7; padding: 1pt 3pt; border-radius: 2pt;
+}
+pre {
+  background: #f6f8fa; border: 1px solid #e1e6eb; border-radius: 3pt;
+  padding: 8pt 10pt; overflow-x: auto; font-size: 8.6pt; page-break-inside: avoid;
+}
+pre code { background: none; padding: 0; }
+img {
+  display: block; max-width: 100%; height: auto; margin: 10pt auto 3pt;
+  page-break-inside: avoid;
+}
+img + em, p > em:only-child {
+  display: block; text-align: center; color: #4a5a6a; font-size: 8.8pt; margin: 0 0 12pt;
+}
+strong { color: #102c47; }
+</style>
+</head>
+<body>
+<h1>Heart Disease Prediction using Machine Learning</h1>
+<p><strong>Course:</strong> CSE-4115 Machine Learning<br />
+<strong>Department of Computer Science and Engineering (CSE)</strong><br />
+<strong>Bangladesh Army University of Engineering &amp; Technology (BAUET)</strong><br />
+<strong>Batch:</strong> 17th — 4th Year 1st Semester, Summer-26<br />
+<strong>Assignment:</strong> Machine Learning Project (15 Marks)</p>
+<p><strong>Student Name:</strong> Zarif Ahnaf Dhrubo<br />
+<strong>Student ID:</strong> 0812310205101023</p>
+<hr />
+<h2>Abstract</h2>
+<p>This project investigates whether routine clinical measurements can be used to predict the presence
+of heart disease. The publicly available <strong>Heart Failure Prediction Dataset</strong> (fedesoriano, Kaggle;
+918 patients, 11 features) was analysed using a complete supervised machine-learning workflow:
+data inspection, domain-aware cleaning, feature encoding and scaling, exploratory data analysis,
+model training, evaluation, 5-fold cross-validation and hyperparameter tuning. Six classifiers were
+compared: Logistic Regression, K-Nearest Neighbors, Gaussian Naive Bayes, Decision Tree, Random
+Forest and Support Vector Machine. The best held-out test performance was obtained by <strong>Logistic
+Regression</strong> with <strong>88.59% accuracy, 88.57% precision, 91.18% recall, 0.8986 F1-score and 0.9323
+ROC-AUC</strong>. The best cross-validated accuracy was obtained by SVM (85.84%), but the top models were
+statistically indistinguishable. Feature-importance analysis identified <strong>ST slope, maximum heart
+rate, ST depression (Oldpeak), exercise-induced angina, chest-pain type, sex and age</strong> as the main
+predictors. The project also documents an important data-quality finding: treating physiologically
+impossible zero cholesterol values as missing reverses the apparent sign of cholesterol's
+relationship with heart disease. All code, figures and results are reproducible from the included
+Jupyter notebook.</p>
+<p><strong>Keywords:</strong> heart disease, classification, supervised learning, logistic regression, random
+forest, SVM, cross-validation, hyperparameter tuning, feature importance</p>
+<hr />
+<h2>1. Introduction</h2>
+<p>Cardiovascular disease is one of the leading causes of death worldwide. Early identification of
+high-risk patients allows clinicians to order further tests, adjust medication and recommend
+lifestyle changes sooner. A machine-learning model that estimates risk from inexpensive,
+routinely collected clinical measurements can therefore be a useful decision-support tool.</p>
+<p>The objective of this assignment is to apply the complete supervised-learning pipeline to a
+real-world public dataset and to compare several classification algorithms rigorously. The specific
+objectives are:</p>
+<ol>
+<li>Load and inspect the dataset, and identify data-quality problems.</li>
+<li>Handle missing/invalid values, encode categorical variables and scale numerical features.</li>
+<li>Perform EDA and derive meaningful clinical insights.</li>
+<li>Train at least two suitable classification models and evaluate them with accuracy, precision,
+recall, F1-score, confusion matrices and ROC-AUC.</li>
+<li>Improve at least one model with cross-validation and hyperparameter tuning.</li>
+<li>Identify the most important features and explain the results.</li>
+<li>Discuss limitations and suggest future improvements.</li>
+</ol>
+<p>The <strong>Heart Failure Prediction Dataset</strong> was selected after benchmarking all four datasets offered
+in the assignment. On an identical preprocessing and train/test protocol, it produced the strongest
+and most balanced classification results (≈ 88.6% accuracy / 0.933 ROC-AUC), while retaining clear
+clinical interpretability. The other candidates were weaker: Titanic reached about 81% accuracy,
+house-price regression reached R² ≈ 0.855 but required far heavier preprocessing, and the student
+performance dataset had little predictable signal from demographic variables alone (R² ≈ 0.18).</p>
+<hr />
+<h2>2. Dataset Description</h2>
+<p><strong>Source:</strong> <a href="https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction">Heart Failure Prediction Dataset — fedesoriano, Kaggle</a><br />
+<strong>Local copy:</strong> <code>data/heart.csv</code><br />
+<strong>Size:</strong> 918 patients × 12 columns (11 features + target)<br />
+<strong>Target:</strong> <code>HeartDisease</code> — 1 = heart disease present (553 patients, 55.3%), 0 = no heart disease
+(410 patients, 44.7%). The classes are close to balanced.</p>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Age</code></td>
+  <td>Numeric (years)</td>
+  <td>Age of the patient</td>
+</tr>
+<tr>
+  <td><code>Sex</code></td>
+  <td>Categorical (M/F)</td>
+  <td>Sex of the patient</td>
+</tr>
+<tr>
+  <td><code>ChestPainType</code></td>
+  <td>Categorical (TA, ATA, NAP, ASY)</td>
+  <td>Type of chest pain</td>
+</tr>
+<tr>
+  <td><code>RestingBP</code></td>
+  <td>Numeric (mm Hg)</td>
+  <td>Resting blood pressure</td>
+</tr>
+<tr>
+  <td><code>Cholesterol</code></td>
+  <td>Numeric (mg/dl)</td>
+  <td>Serum cholesterol</td>
+</tr>
+<tr>
+  <td><code>FastingBS</code></td>
+  <td>Binary (0/1)</td>
+  <td>Fasting blood sugar &gt; 120 mg/dl</td>
+</tr>
+<tr>
+  <td><code>RestingECG</code></td>
+  <td>Categorical (Normal, ST, LVH)</td>
+  <td>Resting electrocardiogram result</td>
+</tr>
+<tr>
+  <td><code>MaxHR</code></td>
+  <td>Numeric (bpm)</td>
+  <td>Maximum heart rate achieved</td>
+</tr>
+<tr>
+  <td><code>ExerciseAngina</code></td>
+  <td>Categorical (Y/N)</td>
+  <td>Exercise-induced angina</td>
+</tr>
+<tr>
+  <td><code>Oldpeak</code></td>
+  <td>Numeric</td>
+  <td>ST depression induced by exercise relative to rest</td>
+</tr>
+<tr>
+  <td><code>ST_Slope</code></td>
+  <td>Categorical (Up, Flat, Down)</td>
+  <td>Slope of the peak exercise ST segment</td>
+</tr>
+<tr>
+  <td><code>HeartDisease</code></td>
+  <td>Binary (0/1)</td>
+  <td>Target variable</td>
+</tr>
+</tbody>
+</table>
+<p>There are <strong>no <code>NaN</code> values</strong> and <strong>no duplicate rows</strong>, but <strong>172 patients have
+<code>Cholesterol = 0</code></strong> and <strong>1 patient has <code>RestingBP = 0</code></strong>. These are not physically plausible
+measurements and are treated as missing values.</p>
+<hr />
+<h2>3. Methodology</h2>
+<p>All experiments were implemented in Python 3 with <code>pandas</code>, <code>scikit-learn</code>, <code>matplotlib</code> and
+<code>seaborn</code>. A fixed random seed (<code>random_state = 42</code>) was used throughout. The complete code and
+executed outputs are in <code>notebooks/Heart_Disease_Prediction.ipynb</code>.</p>
+<h3>3.1 Data Cleaning and Preprocessing</h3>
+<p>The preprocessing decisions are summarised below.</p>
+<table>
+<thead>
+<tr>
+  <th>Step</th>
+  <th>Treatment</th>
+  <th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Invalid zeros</td>
+  <td>Replace <code>Cholesterol = 0</code> and <code>RestingBP = 0</code> with <code>NaN</code></td>
+  <td>Zero cholesterol or blood pressure is physiologically impossible</td>
+</tr>
+<tr>
+  <td>Missing values</td>
+  <td>Median imputation inside the model pipeline</td>
+  <td>Robust to outliers; fitted only on training data</td>
+</tr>
+<tr>
+  <td>Categorical features</td>
+  <td>One-hot encoding, dropping the first level</td>
+  <td>Models require numeric input; avoids perfect collinearity</td>
+</tr>
+<tr>
+  <td>Numerical features</td>
+  <td><code>StandardScaler</code></td>
+  <td>Required for KNN/SVM and helpful for regularised Logistic Regression</td>
+</tr>
+<tr>
+  <td>Train/test split</td>
+  <td>80/20 stratified split (734 / 184 patients)</td>
+  <td>Preserves the 55/45 class balance in both sets</td>
+</tr>
+<tr>
+  <td>Leakage prevention</td>
+  <td>All preprocessing inside a <code>scikit-learn Pipeline</code></td>
+  <td>The test set never influences imputation, encoding or scaling</td>
+</tr>
+</tbody>
+</table>
+<p><strong>A key data-quality finding.</strong> Of the 172 zero-cholesterol records, <strong>152 belong to patients with
+heart disease</strong>. Leaving the zeros as real measurements makes the disease group's mean cholesterol
+artificially low and produces a misleading <em>negative</em> correlation (≈ −0.23). After marking the
+zeros as missing and imputing them, the correlation becomes weakly positive (≈ +0.10). This
+demonstrates why domain knowledge must precede automatic preprocessing.</p>
+<p>The transformed feature matrix contains <strong>15 columns</strong>: six scaled numerical features and nine
+one-hot columns (1 for <code>Sex</code>, 3 for <code>ChestPainType</code>, 2 for <code>RestingECG</code>, 1 for <code>ExerciseAngina</code> and
+2 for <code>ST_Slope</code>).</p>
+<h3>3.2 Exploratory Data Analysis</h3>
+<p>The EDA used histograms, bar plots of disease rates, box plots, a correlation heat map and a pair
+plot. The main observations are summarised here; all figures are in <code>report/figures/</code>.</p>
+<p><strong>Target distribution</strong> (<code>figures/01_target_distribution.png</code>). The classes are reasonably balanced
+(55.3% disease, 44.7% no disease). Accuracy is therefore meaningful, but recall for the disease
+class is especially important in a screening context, because a false negative (missed disease) is
+usually more costly than a false positive.</p>
+<p><img src="figures/01_target_distribution.png" alt="Distribution of the target variable" /></p>
+<p><em>Figure 1 — Distribution of the target variable (<code>HeartDisease</code>).</em></p>
+<p><strong>Numerical distributions</strong> (<code>figures/02_numeric_distributions.png</code>, <code>figures/04_boxplots.png</code>):</p>
+<ul>
+<li>Patients with heart disease are older on average (55.9 vs 50.6 years). The disease rate rises from
+about 36% in the 30–40 age group to about 74% in the 60–70 group.</li>
+<li><code>MaxHR</code> is much lower in the disease group (mean 127.7 vs 148.2 bpm). A high achievable maximum
+heart rate is protective.</li>
+<li><code>Oldpeak</code> (ST depression) is clearly higher in the disease group (mean 1.27 vs 0.41). The disease
+rate rises from about 35% for <code>Oldpeak ≤ 0</code> to over 90% for <code>Oldpeak &gt; 2</code>.</li>
+<li><code>Cholesterol</code> and <code>RestingBP</code> show substantial overlap between classes and are weak single
+predictors after cleaning.</li>
+</ul>
+<p><img src="figures/02_numeric_distributions.png" alt="Histograms of clinical measurements by heart-disease status" /></p>
+<p><em>Figure 2 — Distributions of the main clinical measurements, split by heart-disease status.</em></p>
+<p><img src="figures/04_boxplots.png" alt="Box plots of clinical measurements by heart-disease status" /></p>
+<p><em>Figure 3 — Box plots of the numerical features for the two classes.</em></p>
+<p><strong>Categorical disease rates</strong> (<code>figures/03_categorical_rates.png</code>):</p>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th>Group</th>
+  <th>Disease rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Sex</code></td>
+  <td>Female</td>
+  <td>25.9%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>Male</td>
+  <td>63.2%</td>
+</tr>
+<tr>
+  <td><code>ChestPainType</code></td>
+  <td>ATA</td>
+  <td>13.9%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>NAP</td>
+  <td>35.5%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>TA</td>
+  <td>43.5%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>ASY</td>
+  <td>79.0%</td>
+</tr>
+<tr>
+  <td><code>ExerciseAngina</code></td>
+  <td>N</td>
+  <td>35.1%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>Y</td>
+  <td>85.2%</td>
+</tr>
+<tr>
+  <td><code>ST_Slope</code></td>
+  <td>Up</td>
+  <td>19.7%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>Down</td>
+  <td>77.8%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>Flat</td>
+  <td>82.8%</td>
+</tr>
+<tr>
+  <td><code>FastingBS</code></td>
+  <td>0</td>
+  <td>48.0%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>1</td>
+  <td>79.4%</td>
+</tr>
+<tr>
+  <td><code>RestingECG</code></td>
+  <td>Normal</td>
+  <td>51.6%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>LVH</td>
+  <td>56.4%</td>
+</tr>
+<tr>
+  <td></td>
+  <td>ST</td>
+  <td>65.7%</td>
+</tr>
+</tbody>
+</table>
+<p>The strongest categorical signals are <strong>sex</strong>, <strong>exercise-induced angina</strong>, <strong>ST slope</strong>,
+<strong>chest-pain type</strong> and <strong>fasting blood sugar</strong>. The counter-intuitive <code>ASY</code> result (asymptomatic
+patients have the highest disease rate) is well known in this dataset: many patients with silent
+ischemia are labelled asymptomatic, while atypical angina (<code>ATA</code>) is the least severe group.
+<code>RestingECG</code> is the weakest categorical feature.</p>
+<p><img src="figures/03_categorical_rates.png" alt="Heart-disease rate by categorical feature" /></p>
+<p><em>Figure 4 — Heart-disease rate for each category, with the overall rate as a dashed line.</em></p>
+<p><strong>Correlation analysis</strong> (<code>figures/05_correlation_heatmap.png</code>). The strongest linear correlations
+with <code>HeartDisease</code> are <code>MaxHR</code> (−0.40), <code>Oldpeak</code> (+0.40), <code>Age</code> (+0.28), <code>FastingBS</code> (+0.27),
+<code>RestingBP</code> (+0.12) and <code>Cholesterol</code> (+0.10). <code>Oldpeak</code> and <code>MaxHR</code> are only weakly correlated with
+each other, so they contribute complementary information.</p>
+<p><img src="figures/05_correlation_heatmap.png" alt="Correlation matrix of numerical features" /></p>
+<p><em>Figure 5 — Correlation matrix of the numerical features after cleaning.</em></p>
+<p><strong>Pair plot</strong> (<code>figures/06_pairplot.png</code>). There is visible but overlapping separation, mainly along
+<code>MaxHR</code> and <code>Oldpeak</code>. No single feature separates the classes perfectly, which motivates testing
+non-linear models such as Random Forest and SVM.</p>
+<p><img src="figures/06_pairplot.png" alt="Pair plot of selected clinical features" /></p>
+<p><em>Figure 6 — Pair plot of selected clinical features, coloured by heart-disease status.</em></p>
+<p><strong>Age-group and <code>Oldpeak</code>-bin summaries</strong> (<code>figures/07_age_oldpeak_rates.png</code>). Risk rises steadily
+with age and with ST depression. Above an <code>Oldpeak</code> of 2, more than 90% of patients in this dataset
+have heart disease.</p>
+<p><img src="figures/07_age_oldpeak_rates.png" alt="Disease rate by age group and Oldpeak bin" /></p>
+<p><em>Figure 7 — Heart-disease rate by age group (left) and by <code>Oldpeak</code> range (right).</em></p>
+<h3>3.3 Models</h3>
+<p>Six classifiers were trained on the same preprocessed data:</p>
+<ol>
+<li><strong>Logistic Regression</strong> — linear probabilistic baseline; interpretable coefficients.</li>
+<li><strong>K-Nearest Neighbors (k = 5)</strong> — distance-based instance learner.</li>
+<li><strong>Gaussian Naive Bayes</strong> — probabilistic classifier with a conditional-independence assumption.</li>
+<li><strong>Decision Tree</strong> — unpruned, non-linear rule-based model.</li>
+<li><strong>Random Forest (200 trees)</strong> — bagged ensemble that reduces the variance of a single tree.</li>
+<li><strong>Support Vector Machine (RBF kernel)</strong> — maximum-margin classifier, included as the optional
+advanced extension suggested in the assignment.</li>
+</ol>
+<h3>3.4 Evaluation Metrics</h3>
+<p>For each model the following were reported:</p>
+<ul>
+<li><strong>Accuracy</strong> — overall proportion of correct predictions.</li>
+<li><strong>Precision</strong> — among patients predicted to have disease, the proportion who truly do.</li>
+<li><strong>Recall (sensitivity)</strong> — among patients who truly have disease, the proportion detected.</li>
+<li><strong>F1-score</strong> — harmonic mean of precision and recall, useful when both matter.</li>
+<li><strong>Confusion matrix</strong> — counts of true/false positives and negatives.</li>
+<li><strong>ROC-AUC</strong> — threshold-independent ranking quality (1.0 perfect, 0.5 random).</li>
+</ul>
+<h3>3.5 Cross-Validation and Hyperparameter Tuning</h3>
+<p>Model stability was estimated with <strong>5-fold stratified cross-validation</strong> on the training set.
+Preprocessing was re-fitted inside every fold, so the validation folds never influenced scaling or
+imputation.</p>
+<p>Hyperparameter tuning was performed with <code>GridSearchCV</code>, using <strong>F1-score</strong> as the selection
+criterion (because both false positives and false negatives matter, and F1 balances them):</p>
+<ul>
+<li><strong>Random Forest:</strong> <code>n_estimators ∈ {100, 200, 300}</code>, <code>max_depth ∈ {4, 6, 8, None}</code>,
+<code>min_samples_split ∈ {2, 5}</code>, <code>min_samples_leaf ∈ {1, 2}</code> — 48 configurations × 5 folds = 240 fits.</li>
+<li><strong>Logistic Regression:</strong> <code>C ∈ {0.01, 0.1, 1, 10, 100}</code> — 5 configurations × 5 folds = 25 fits.</li>
+</ul>
+<hr />
+<h2>4. Results</h2>
+<h3>4.1 Baseline Model Comparison</h3>
+<p>Results on the held-out 20% test set (184 patients):</p>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th style="text-align:right">Accuracy</th>
+  <th style="text-align:right">Precision</th>
+  <th style="text-align:right">Recall</th>
+  <th style="text-align:right">F1-score</th>
+  <th style="text-align:right">ROC-AUC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Logistic Regression</strong></td>
+  <td style="text-align:right"><strong>0.8859</strong></td>
+  <td style="text-align:right">0.8857</td>
+  <td style="text-align:right"><strong>0.9118</strong></td>
+  <td style="text-align:right"><strong>0.8986</strong></td>
+  <td style="text-align:right">0.9323</td>
+</tr>
+<tr>
+  <td>Gaussian Naive Bayes</td>
+  <td style="text-align:right">0.8750</td>
+  <td style="text-align:right"><strong>0.9072</strong></td>
+  <td style="text-align:right">0.8627</td>
+  <td style="text-align:right">0.8844</td>
+  <td style="text-align:right"><strong>0.9430</strong></td>
+</tr>
+<tr>
+  <td>Support Vector Machine</td>
+  <td style="text-align:right">0.8696</td>
+  <td style="text-align:right">0.8679</td>
+  <td style="text-align:right">0.9020</td>
+  <td style="text-align:right">0.8846</td>
+  <td style="text-align:right">0.9360</td>
+</tr>
+<tr>
+  <td>Random Forest</td>
+  <td style="text-align:right">0.8641</td>
+  <td style="text-align:right">0.8812</td>
+  <td style="text-align:right">0.8725</td>
+  <td style="text-align:right">0.8768</td>
+  <td style="text-align:right">0.9307</td>
+</tr>
+<tr>
+  <td>K-Nearest Neighbors</td>
+  <td style="text-align:right">0.8478</td>
+  <td style="text-align:right">0.8627</td>
+  <td style="text-align:right">0.8627</td>
+  <td style="text-align:right">0.8627</td>
+  <td style="text-align:right">0.9236</td>
+</tr>
+<tr>
+  <td>Decision Tree</td>
+  <td style="text-align:right">0.7391</td>
+  <td style="text-align:right">0.7700</td>
+  <td style="text-align:right">0.7549</td>
+  <td style="text-align:right">0.7624</td>
+  <td style="text-align:right">0.7372</td>
+</tr>
+</tbody>
+</table>
+<p>The majority-class baseline (always predict &quot;heart disease&quot;) is 55.3% accuracy. Every model except
+the single Decision Tree improves substantially on this baseline. The top five models are separated
+by only about four percentage points — with 184 test patients, that corresponds to a handful of
+cases, so single-split differences must be interpreted cautiously.</p>
+<p><strong>Confusion matrices</strong> (<code>figures/08_confusion_matrices.png</code>) show that Logistic Regression detects
+93 of the 102 disease cases (recall 91.2%) while producing 12 false positives. Gaussian Naive Bayes
+has the highest precision (0.907) but a lower recall (0.863), so it misses more true disease cases.
+SVM balances the two (recall 0.902, precision 0.868).</p>
+<p><img src="figures/08_confusion_matrices.png" alt="Confusion matrices on the test set" /></p>
+<p><em>Figure 8 — Confusion matrices for the six classifiers on the 184-patient test set.</em></p>
+<p><strong>ROC curves</strong> (<code>figures/09_roc_curves.png</code>) confirm that all top models rank patients well:
+Gaussian Naive Bayes (0.943), SVM (0.936), Logistic Regression (0.932), Random Forest (0.931) and
+KNN (0.924). The Decision Tree is far behind (0.737).</p>
+<p><img src="figures/09_roc_curves.png" alt="ROC curves on the test set" /></p>
+<p><em>Figure 9 — ROC curves and AUC values for all six classifiers.</em></p>
+<h3>4.2 Cross-Validation Results</h3>
+<p>5-fold stratified cross-validation on the training set:</p>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th style="text-align:right">CV Accuracy</th>
+  <th style="text-align:right">Std</th>
+  <th style="text-align:right">CV Precision</th>
+  <th style="text-align:right">CV Recall</th>
+  <th style="text-align:right">CV F1</th>
+  <th style="text-align:right">CV F1 Std</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Support Vector Machine</strong></td>
+  <td style="text-align:right"><strong>0.8584</strong></td>
+  <td style="text-align:right">0.0461</td>
+  <td style="text-align:right">0.8532</td>
+  <td style="text-align:right">0.9041</td>
+  <td style="text-align:right"><strong>0.8768</strong></td>
+  <td style="text-align:right">0.0359</td>
+</tr>
+<tr>
+  <td>Random Forest</td>
+  <td style="text-align:right">0.8529</td>
+  <td style="text-align:right">0.0339</td>
+  <td style="text-align:right">0.8541</td>
+  <td style="text-align:right">0.8917</td>
+  <td style="text-align:right">0.8708</td>
+  <td style="text-align:right">0.0255</td>
+</tr>
+<tr>
+  <td>Logistic Regression</td>
+  <td style="text-align:right">0.8515</td>
+  <td style="text-align:right"><strong>0.0289</strong></td>
+  <td style="text-align:right">0.8639</td>
+  <td style="text-align:right">0.8720</td>
+  <td style="text-align:right">0.8671</td>
+  <td style="text-align:right">0.0223</td>
+</tr>
+<tr>
+  <td>K-Nearest Neighbors</td>
+  <td style="text-align:right">0.8420</td>
+  <td style="text-align:right">0.0316</td>
+  <td style="text-align:right">0.8383</td>
+  <td style="text-align:right">0.8867</td>
+  <td style="text-align:right">0.8616</td>
+  <td style="text-align:right">0.0253</td>
+</tr>
+<tr>
+  <td>Gaussian Naive Bayes</td>
+  <td style="text-align:right">0.8393</td>
+  <td style="text-align:right">0.0423</td>
+  <td style="text-align:right">0.8578</td>
+  <td style="text-align:right">0.8548</td>
+  <td style="text-align:right">0.8552</td>
+  <td style="text-align:right">0.0353</td>
+</tr>
+<tr>
+  <td>Decision Tree</td>
+  <td style="text-align:right">0.7915</td>
+  <td style="text-align:right">0.0332</td>
+  <td style="text-align:right">0.8091</td>
+  <td style="text-align:right">0.8180</td>
+  <td style="text-align:right">0.8123</td>
+  <td style="text-align:right">0.0322</td>
+</tr>
+</tbody>
+</table>
+<p>Cross-validation changes the ordering: <strong>SVM</strong> is first, followed by Random Forest and Logistic
+Regression. The differences among the top three (0.858 vs 0.853 vs 0.852) are well within one
+standard deviation, so no model is significantly superior. Logistic Regression is the most stable
+across folds (std 0.029), while Decision Tree is clearly and consistently the weakest.</p>
+<p>The CV scores are slightly lower than the single test-split scores (for example, Logistic
+Regression: 0.8515 CV vs 0.8859 test). This is expected — the test split happened to be relatively
+easy — and CV is the more trustworthy estimate of generalisation.</p>
+<p><img src="figures/10_cv_boxplot.png" alt="Cross-validation accuracy by model" /></p>
+<p><em>Figure 10 — Fold-level accuracy for 5-fold stratified cross-validation.</em></p>
+<h3>4.3 Hyperparameter Tuning</h3>
+<p><strong>Random Forest.</strong> The best configuration was <code>n_estimators = 100</code>, <code>max_depth = 8</code>,
+<code>min_samples_split = 2</code>, <code>min_samples_leaf = 1</code>. It achieved a best <strong>cross-validated F1 of 0.8766</strong>,
+compared with 0.8708 for the default forest — an improvement of +0.0058. On the single test set,
+however, accuracy moved from 0.8641 to 0.8587 and F1 from 0.8768 to 0.8725 (ROC-AUC 0.9307 → 0.9310).
+The test change is within fold-to-fold noise.</p>
+<p><strong>Logistic Regression.</strong> The best value was <code>C = 0.1</code>, with a best <strong>cross-validated F1 of 0.8685</strong>
+versus 0.8671 for the default — a marginal improvement of +0.0014. Test accuracy moved from 0.8859 to
+0.8696 (F1 0.8986 → 0.8824), while test ROC-AUC improved slightly from 0.9323 to 0.9346.</p>
+<p><strong>Interpretation.</strong> Grid search did what it is designed to do: it improved the cross-validated F1 on
+the training data. The small improvements did not transfer to the 184-patient test split, and the
+test-set changes are much smaller than the cross-validation standard deviations (≈ 0.03–0.05). This
+is an honest and instructive result: tuning is not guaranteed to improve a single small test split,
+and hyperparameters should not be selected by repeatedly checking test performance, since that would
+leak information. The tuned models are reported transparently in
+<code>report/final_model_comparison.csv</code>.</p>
+<h3>4.4 Final Ranking</h3>
+<table>
+<thead>
+<tr>
+  <th>Model</th>
+  <th style="text-align:right">Accuracy</th>
+  <th style="text-align:right">F1-score</th>
+  <th style="text-align:right">ROC-AUC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Logistic Regression</strong></td>
+  <td style="text-align:right"><strong>0.8859</strong></td>
+  <td style="text-align:right"><strong>0.8986</strong></td>
+  <td style="text-align:right">0.9323</td>
+</tr>
+<tr>
+  <td>Gaussian Naive Bayes</td>
+  <td style="text-align:right">0.8750</td>
+  <td style="text-align:right">0.8844</td>
+  <td style="text-align:right"><strong>0.9430</strong></td>
+</tr>
+<tr>
+  <td>Support Vector Machine</td>
+  <td style="text-align:right">0.8696</td>
+  <td style="text-align:right">0.8846</td>
+  <td style="text-align:right">0.9360</td>
+</tr>
+<tr>
+  <td>Logistic Regression (tuned, C=0.1)</td>
+  <td style="text-align:right">0.8696</td>
+  <td style="text-align:right">0.8824</td>
+  <td style="text-align:right">0.9346</td>
+</tr>
+<tr>
+  <td>Random Forest</td>
+  <td style="text-align:right">0.8641</td>
+  <td style="text-align:right">0.8768</td>
+  <td style="text-align:right">0.9307</td>
+</tr>
+<tr>
+  <td>Random Forest (tuned, depth=8)</td>
+  <td style="text-align:right">0.8587</td>
+  <td style="text-align:right">0.8725</td>
+  <td style="text-align:right">0.9310</td>
+</tr>
+<tr>
+  <td>K-Nearest Neighbors</td>
+  <td style="text-align:right">0.8478</td>
+  <td style="text-align:right">0.8627</td>
+  <td style="text-align:right">0.9236</td>
+</tr>
+<tr>
+  <td>Decision Tree</td>
+  <td style="text-align:right">0.7391</td>
+  <td style="text-align:right">0.7624</td>
+  <td style="text-align:right">0.7372</td>
+</tr>
+</tbody>
+</table>
+<p><img src="figures/11_final_model_comparison.png" alt="Final model comparison" /></p>
+<p><em>Figure 11 — Final comparison of all models (including tuned variants) on the test set.</em></p>
+<h3>4.5 Feature Importance</h3>
+<p>Three complementary views were used: impurity-based importance from the Random Forest, permutation
+importance on the test set, and standardised Logistic Regression coefficients.</p>
+<p><strong>Random Forest impurity importance (top 10):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th style="text-align:right">Importance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>ST_Slope_Up</code></td>
+  <td style="text-align:right">0.2032</td>
+</tr>
+<tr>
+  <td><code>ST_Slope_Flat</code></td>
+  <td style="text-align:right">0.1261</td>
+</tr>
+<tr>
+  <td><code>MaxHR</code></td>
+  <td style="text-align:right">0.1074</td>
+</tr>
+<tr>
+  <td><code>Oldpeak</code></td>
+  <td style="text-align:right">0.1056</td>
+</tr>
+<tr>
+  <td><code>ExerciseAngina_Y</code></td>
+  <td style="text-align:right">0.0898</td>
+</tr>
+<tr>
+  <td><code>Age</code></td>
+  <td style="text-align:right">0.0697</td>
+</tr>
+<tr>
+  <td><code>Cholesterol</code></td>
+  <td style="text-align:right">0.0656</td>
+</tr>
+<tr>
+  <td><code>RestingBP</code></td>
+  <td style="text-align:right">0.0624</td>
+</tr>
+<tr>
+  <td><code>ChestPainType_ATA</code></td>
+  <td style="text-align:right">0.0472</td>
+</tr>
+<tr>
+  <td><code>Sex_M</code></td>
+  <td style="text-align:right">0.0355</td>
+</tr>
+</tbody>
+</table>
+<p><img src="figures/12_rf_feature_importance.png" alt="Random Forest impurity-based feature importance" /></p>
+<p><em>Figure 12 — Random Forest impurity-based feature importance (top 12).</em></p>
+<p><strong>Permutation importance on the test set (mean accuracy drop):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th style="text-align:right">Importance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>ST_Slope</code></td>
+  <td style="text-align:right">0.1503</td>
+</tr>
+<tr>
+  <td><code>Sex</code></td>
+  <td style="text-align:right">0.0337</td>
+</tr>
+<tr>
+  <td><code>ChestPainType</code></td>
+  <td style="text-align:right">0.0234</td>
+</tr>
+<tr>
+  <td><code>ExerciseAngina</code></td>
+  <td style="text-align:right">0.0193</td>
+</tr>
+<tr>
+  <td><code>FastingBS</code></td>
+  <td style="text-align:right">0.0179</td>
+</tr>
+<tr>
+  <td><code>Oldpeak</code></td>
+  <td style="text-align:right">0.0177</td>
+</tr>
+<tr>
+  <td><code>MaxHR</code></td>
+  <td style="text-align:right">0.0158</td>
+</tr>
+<tr>
+  <td><code>RestingECG</code></td>
+  <td style="text-align:right">0.0149</td>
+</tr>
+<tr>
+  <td><code>Cholesterol</code></td>
+  <td style="text-align:right">0.0114</td>
+</tr>
+<tr>
+  <td><code>Age</code></td>
+  <td style="text-align:right">0.0090</td>
+</tr>
+</tbody>
+</table>
+<p><img src="figures/13_permutation_importance.png" alt="Permutation importance on the test set" /></p>
+<p><em>Figure 13 — Permutation importance on the test set (mean accuracy drop).</em></p>
+<p><strong>Interpretation.</strong> <code>ST_Slope</code> is unambiguously the dominant predictor in both rankings. An
+up-sloping ST segment is protective, while flat or down-sloping segments dramatically increase risk.
+<code>MaxHR</code>, <code>Oldpeak</code>, <code>ExerciseAngina</code>, <code>ChestPainType</code> and <code>Sex</code> form the next tier. Age, fasting
+blood sugar and cholesterol contribute smaller amounts; cholesterol is much weaker after the
+impossible zeros are corrected. <code>RestingECG</code> is consistently unimportant. The logistic coefficients
+(<code>figures/14_logistic_coefficients.png</code>) confirm the directions: a flat ST slope, male sex,
+exercise-induced angina, higher fasting blood sugar and higher <code>Oldpeak</code> increase the log-odds of
+disease, while a high <code>MaxHR</code>, an up-sloping ST segment and the non-<code>ASY</code> chest-pain types (ATA, NAP,
+TA) decrease it. <code>ASY</code> and <code>Down</code> are the dropped reference levels, so they appear as the baseline
+rather than as separate coefficients.</p>
+<p><img src="figures/14_logistic_coefficients.png" alt="Logistic Regression coefficients" /></p>
+<p><em>Figure 14 — Standardised Logistic Regression coefficients (log-odds of heart disease).</em></p>
+<hr />
+<h2>5. Discussion</h2>
+<h3>5.1 Which model performed best?</h3>
+<p>On the held-out test set, <strong>Logistic Regression</strong> performed best on accuracy (0.8859), F1 (0.8986)
+and recall (0.9118), with the second-best AUC (0.9323, behind 0.9430 for Gaussian Naive Bayes).
+Under 5-fold cross-validation, <strong>SVM</strong> had the highest mean accuracy (0.8584), with Random
+Forest (0.8529) and Logistic Regression (0.8515) close behind. Because the top three are separated
+by less than one standard deviation, there is no statistically decisive winner.</p>
+<p><strong>We select Logistic Regression as the final model</strong> for three reasons:</p>
+<ol>
+<li>It has the best held-out accuracy, F1 and recall.</li>
+<li>It is the most stable across CV folds (lowest accuracy standard deviation among the top group).</li>
+<li>Its coefficients are directly interpretable, which matters for a clinical audience.</li>
+</ol>
+<h3>5.2 Why does Logistic Regression perform so well?</h3>
+<p>After median imputation, one-hot encoding and standardisation, the clinical measurements have a
+strong, largely additive relationship with the log-odds of heart disease. In particular, the
+ST-slope indicators, <code>Oldpeak</code>, <code>MaxHR</code> and <code>ExerciseAngina</code> already encode the main exercise-stress
+signal, and the dataset is close to linearly separable in this transformed space. L2 regularisation
+(<code>C ≈ 1</code>) controls overfitting on 734 training rows. Random Forest and SVM can model non-linear
+interactions, but they do not find additional signal that improves the test result; their similar
+ROC-AUC confirms that the simple model captures most of the available predictive information.</p>
+<p>The single Decision Tree is much worse because an unpruned tree grows until its leaves are pure,
+memorising noise in the training data. Random Forest fixes this by averaging many de-correlated
+trees (bagging), which reduces variance and improves generalisation — but not enough to beat the
+regularised linear model on this relatively small dataset.</p>
+<p>Gaussian Naive Bayes is a useful surprise: despite its independence assumption, it has the highest
+ROC-AUC and second-highest test accuracy, because the per-feature class distributions are
+sufficiently different to rank patients well. Its lower cross-validation score suggests the test
+result is partly favourable noise.</p>
+<h3>5.3 Most important features</h3>
+<p>The unanimous top signal is <strong>ST slope</strong>, followed by <strong>maximum heart rate</strong>, <strong>ST depression</strong>,
+<strong>exercise-induced angina</strong>, <strong>chest-pain type</strong> and <strong>sex</strong>. These are clinically plausible:
+exercise-stress ECG behaviour and sex are established risk indicators. <strong>Age</strong> adds a smaller but
+consistent contribution. <strong>Cholesterol</strong> and <strong>resting blood pressure</strong> are weaker than their
+clinical reputation might suggest, at least in this dataset; the cholesterol result is partly
+explained by the large number of invalid zero records. <strong>Resting ECG</strong> carries little unique
+information once the other features are known.</p>
+<h3>5.4 The value of domain-aware preprocessing</h3>
+<p>The cholesterol finding is a concrete example of why EDA and domain knowledge matter. A purely
+automatic pipeline would have kept 172 zeros as real cholesterol measurements, concluded that
+cholesterol is <em>negatively</em> associated with heart disease, and produced a scientifically misleading
+report. Marking impossible values as missing changed both the correlation sign and the feature's
+importance. This is one of the most valuable lessons of the project.</p>
+<hr />
+<h2>6. Limitations</h2>
+<ol>
+<li><strong>Moderate sample size and single split.</strong> The dataset has 918 patients and the headline metrics
+use a 184-patient test set. A difference of a few patients changes accuracy by 1–2 percentage
+points, so the exact ranking of the top models is uncertain.</li>
+<li><strong>Invalid zeros and non-random missingness.</strong> <code>Cholesterol</code> is zero for 172 patients, and 152 of
+those are in the disease group. Median imputation is simple but may bias the cholesterol
+relationship; a model that handles missingness natively or a probabilistic imputer could be
+better.</li>
+<li><strong>No external validation.</strong> The data combine five cohorts, but the model has not been tested on a
+separate hospital or country.</li>
+<li><strong>Limited tuning.</strong> The grid search covered 48 forest configurations and 5 regularisation values;
+SVM and KNN were not tuned in the final notebook, and a wider randomized/Bayesian search could
+find better settings.</li>
+<li><strong>Tuning did not improve test performance.</strong> This is not a failure of the method but reflects the
+small, noisy test set; nested cross-validation would give a cleaner estimate.</li>
+<li><strong>No probability calibration.</strong> The predicted probabilities are not guaranteed to be
+well-calibrated, so they should not be interpreted as exact individual risk.</li>
+<li><strong>No cost-sensitive threshold.</strong> The default 0.5 threshold may not be optimal for screening, where
+false negatives are usually more expensive than false positives.</li>
+<li><strong>Missing risk factors.</strong> Smoking status, BMI, diabetes duration, medication, family history and
+lifestyle variables are not available, limiting the achievable performance.</li>
+<li><strong>Retrospective labels and selection bias.</strong> The source cohorts may not represent the target
+population.</li>
+<li><strong>Clinical use requires regulatory and ethical review.</strong> This model is an academic exercise and
+must not be used for real medical decisions without prospective validation.</li>
+</ol>
+<hr />
+<h2>7. Conclusion and Future Work</h2>
+<p>This project delivered a complete, reproducible machine-learning study of heart-disease prediction.
+After domain-aware cleaning and preprocessing, six classifiers were compared with a comprehensive
+set of metrics. Logistic Regression achieved the best held-out performance (88.59% accuracy, 0.8986
+F1, 0.9323 ROC-AUC), while SVM achieved the best cross-validated accuracy (85.84%). The top models
+were statistically indistinguishable, and the simpler, interpretable Logistic Regression was chosen
+as the final model. Feature importance consistently highlighted ST slope, maximum heart rate, ST
+depression, exercise angina, chest-pain type and sex, matching clinical expectations.</p>
+<p>Future work should focus on external validation, additional clinical features, modern gradient-
+boosting models, probability calibration, cost-sensitive threshold selection, SHAP-based
+explanations, and nested cross-validation. Deploying the saved pipeline behind a small API or
+dashboard would make the model usable in a research or educational setting, but prospective clinical
+validation would be required before any real-world medical use.</p>
+<hr />
+<h2>8. Reproducibility</h2>
+<p><strong>Project structure</strong></p>
+<pre><code>ml-assignment/
+├── data/
+│   └── heart.csv                              # 918-patient dataset
+├── notebooks/
+│   └── Heart_Disease_Prediction.ipynb         # executed notebook (code + outputs)
+├── report/
+│   ├── Project_Report.md                      # this report
+│   ├── Project_Report.html                    # print-ready report
+│   ├── Project_Report.pdf                     # PDF version of this report
+│   ├── Heart_Disease_Prediction.html          # rendered notebook (code + outputs)
+│   ├── results.json                           # all key metrics
+│   ├── model_comparison.csv
+│   ├── cross_validation.csv
+│   ├── final_model_comparison.csv
+│   ├── tuning_random_forest.csv
+│   ├── tuning_logistic_regression.csv
+│   └── figures/                               # all EDA and result figures
+├── models/
+│   ├── random_forest_tuned.joblib
+│   └── logistic_regression_tuned.joblib
+├── main.py                                    # runs the notebook end-to-end
+├── pyproject.toml
+└── README.md
+</code></pre>
+<p><strong>How to run</strong></p>
+<pre><code class="language-bash"># install dependencies
+uv sync
+
+# execute the whole notebook (regenerates all figures and metrics)
+uv run python main.py
+</code></pre>
+<p>or open the notebook directly:</p>
+<pre><code class="language-bash">uv run jupyter lab notebooks/Heart_Disease_Prediction.ipynb
+</code></pre>
+<p><strong>Environment:</strong> Python 3.14.5, pandas 3.1.1, NumPy 2.5.4, scikit-learn 1.9.1, matplotlib 3.11.2,
+seaborn 0.13.2.</p>
+<hr />
+<h2>9. References</h2>
+<ol>
+<li>fedesoriano. <em>Heart Failure Prediction Dataset</em>. Kaggle.
+<a href="https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction">https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction</a></li>
+<li>Pedregosa, F. et al. (2011). Scikit-learn: Machine Learning in Python. <em>Journal of Machine
+Learning Research</em>, 12, 2825–2830. <a href="https://scikit-learn.org/stable/">https://scikit-learn.org/stable/</a></li>
+<li>McKinney, W. (2010). Data Structures for Statistical Computing in Python. <em>Proceedings of the
+9th Python in Science Conference</em>. <a href="https://pandas.pydata.org/docs/">https://pandas.pydata.org/docs/</a></li>
+<li>James, G., Witten, D., Hastie, T., &amp; Tibshirani, R. <em>An Introduction to Statistical Learning</em>.
+Springer.</li>
+<li>Course lectures, CSE-4115 Machine Learning, BAUET (Lec-05 to Lec-11: classification, Naive Bayes,
+KNN, Decision Tree, SVM and Random Forest).</li>
+</ol>
+
+</body>
+</html>
